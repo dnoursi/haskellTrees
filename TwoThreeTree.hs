@@ -23,17 +23,20 @@ data Tree k v = SmallBranch (k,v) (Tree k v) (Tree k v) | BigBranch (k,v) (k,v) 
 insert :: Ord k => (k,v) -> Tree k v -> Tree k v
 
 insert (inKey, inValue) (BigBranch (key1,val1) (key2,val2) left middle right)
-    | inKey <= key1 = Branch (key,val) (insert (inKey, inValue) left) right
-    | inKey >= key2 = Branch (key,val) (insert (inKey, inValue) left) right
-    | otherwise = Branch (key,val) left (insert (inKey, inValue) right)
+    | inKey <= key1 = BigBranch (key,val) (insert (inKey, inValue) left) middle right
+    | inKey > key2 = BigBranch (key,val) left middle (insert (inKey, inValue) right)
+    | otherwise = Branch (key,val) left (insert (inKey, inValue) middle) right
 
 
-insert (inKey, inValue) (Leaf (key,val))
-    | inKey <= key = Branch (key,val) (Leaf (inKey, inValue)) Empty
-    | otherwise = Branch (key,val) Empty (Leaf (inKey, inValue))
+insert (inKey, inValue) (BigLeaf (key1,val1) (key2,val2))
+    | inKey <= key1 = BigBranch (key,val) (SmallLeaf (inKey, inValue)) Empty Empty
+    | inKey > key2 = BigBranch (key,val) Empty Empty (SmallLeaf (inKey, inValue)) Empty
+    | otherwise = BigBranch (key,val) Empty (SmallLeaf (inKey, inValue))
 
 insert (inKey,inValue) (SmallLeaf (key,val))
-    | inKey >= key
+    | inKey <= key = BigLeaf (inKey,inValue) (key,val)
+    | otherwise = BigLeaf (key,val) (inKey,inValue)
+
 insert (inKey,inValue) Empty = SmallLeaf (key,val)
 
 
