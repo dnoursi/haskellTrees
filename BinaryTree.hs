@@ -37,9 +37,9 @@ insert (key,val) Empty = Leaf (key,val)
 --Given a key, return tree with the associated node removed
 delete :: Ord k => k -> Tree k v ->  Tree k v
 delete inKey (Branch (key,val) left right)
-    | inKey < key = Branch (key,val) (delete inKey left) right
+    | inKey < key = confirm $ Branch (key,val) (delete inKey left) right
     | inKey == key =  deleteHelper $ Branch (key, val) left right
-    | inKey > key = Branch (key,val) left (delete inKey right)
+    | inKey > key = confirm $ Branch (key,val) left (delete inKey right)
 delete inKey (Leaf (key,val))
     | inKey == key =  Empty
     | otherwise = Leaf (key,val)
@@ -58,12 +58,17 @@ removeMax (Branch (key,val) left Empty) = left
 removeMax (Branch (key,val) left right) = Branch (key,val) left (removeMax right)
 removeMax (Leaf (key,val)) = Empty
 
+--fixes bug where Branch points to two Emptys
+confirm :: Tree k v -> Tree k v
+confirm (Branch (key,val) Empty Empty) = Leaf (key,val)
+confirm (Branch (key,val) left right) = Branch (key,val) left right
+
 --called by delete on the subtree whose root should be deleted
 deleteHelper :: Tree k v -> Tree k v
 --if the left branch is empty, avoid errors. this case is trivial
 deleteHelper (Branch (key,val) Empty right) = right
 --otherwise, try to run classic deletion algorithm on the left branch.
-deleteHelper (Branch (key, val) left right) = Branch (maxKey left) (removeMax left) right
+deleteHelper (Branch (key, val) left right) = confirm $ Branch (maxKey left) (removeMax left) right
 
 
 
